@@ -4,6 +4,6 @@ const offerController = require('../controllers/offer');
 
 router.get('/cars', offerController.getCars)
 
-router.post('/cars', offerController.postCar)
+router.post('/car', offerController.postCar)
 
 module.exports = router;
