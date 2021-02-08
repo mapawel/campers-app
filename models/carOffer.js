@@ -7,11 +7,9 @@ const carOfferSchema = new Schema({
   seats: Number,
   length: Number,
   description: String,
-  updated: {
-    requred: true,
-    type: Date,
-    default: Date.now
-  }
-})
+  ower: {
+    type: Object,
+  },
+}, { timestamps: true })
 
 module.exports = mongoose.model('caroffer', carOfferSchema) 
