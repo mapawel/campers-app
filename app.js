@@ -1,3 +1,4 @@
+const path = require('path');
 require('dotenv-safe').config();
 const express = require('express');
 const app = express();
@@ -9,6 +10,7 @@ const PORT = process.env.PORT || 8000;
 mongoose.connect(process.env.DB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
 
 app.use(bodyParser.json())
+app.use('/images', express.static(path.join(__dirname, 'images')))
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -20,8 +22,8 @@ app.use((req, res, next) => {
 app.use('/api/offer', offerRoutes)
 
 app.use((error, req, res, next) => {
-  console.log('AIN ERROR HANDLER ON SERVER: ', error)
-  res.status(500).json(error)
+  console.log('MAIN ERROR HANDLER ON SERVER: ', error)
+  res.status(error.httpStatusCode).json({message: error.message})
 })
 
 
@@ -33,4 +35,3 @@ db.once('open', () => {
     console.log(`Camper-app is listening on port: ${PORT}`)
   })
 });
-// kpaUM4f2iw9yLxn
