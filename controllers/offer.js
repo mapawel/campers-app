@@ -13,12 +13,30 @@ module.exports.getCars = async (req, res, next) => {
   }
 }
 
+module.exports.getCarById = async (req, res, next) => {
+  try {
+    const { carId } = req.params;
+    const car = await CarOffer.findById(carId).exec()
+    if (!car) {
+      const err = new Error('No resources available');
+      err.httpStatusCode = 404;
+      throw err
+    }
+    res.status(200).json({
+      car,
+    })
+  } catch (err) {
+    if (!err.httpStatusCode) err.httpStatusCode = 500
+    next(err)
+  }
+}
+
 module.exports.postCar = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const err = new Error('Form validation failed!');
     err.httpStatusCode = 422;
-    next(err)
+    return next(err)
   }
   try {
     const { name, year, length, seats, description, images } = req.body;
