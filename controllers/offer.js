@@ -38,15 +38,22 @@ module.exports.postCar = async (req, res, next) => {
     err.httpStatusCode = 422;
     return next(err)
   }
+  if (req.multerError) {
+    const err = new Error('File size / format validation failed!');
+    err.httpStatusCode = 422;
+    return next(err)
+  }
   try {
-    const { name, year, length, seats, description, images } = req.body;
-    console.log(images)
+    const { name, year, length, seats, description } = req.body;
+    const imagesUrls = req.files.map(file => `/${file.path.replace("\\" ,"/")}`);
+
     const newCarOffer = new CarOffer({
       name,
       year,
       length,
       seats,
       description,
+      imagesUrls,
     });
     const savedData = await newCarOffer.save()
     res.status(201).json({

@@ -7,7 +7,8 @@ const carOfferSchema = new Schema({
   seats: Number,
   length: Number,
   description: String,
-  ower: {
+  imagesUrls: Array,
+  owner: {
     type: Object,
   },
 }, { timestamps: true })
