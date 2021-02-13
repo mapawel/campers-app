@@ -4,10 +4,25 @@ const CarOffer = require('../models/carOffer');
 const { validationResult } = require('express-validator');
 
 module.exports.getCars = async (req, res, next) => {
+  const pageItems = 5;
+  const { page } = req.query;
   try {
-    const cars = await CarOffer.find().exec()
+    const itemsQty = await CarOffer.countDocuments().exec()
+    let toSkip = itemsQty - (pageItems * page)
+    if (toSkip < 0) toSkip = 0
+    let toLimit = pageItems
+    if (itemsQty % pageItems && toSkip === 0) toLimit = itemsQty % pageItems
+    console.log(toLimit)
+    const cars = await CarOffer
+      .find()
+      .skip(toSkip)
+      .limit(toLimit)
+      .exec()
     res.status(200).json({
-      cars,
+      carsRes: {
+        cars,
+        carsQty: itemsQty
+      },
     })
   } catch (err) {
     if (!err.httpStatusCode) err.httpStatusCode = 500
