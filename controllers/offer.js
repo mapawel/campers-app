@@ -1,3 +1,5 @@
+const path = require('path');
+const fs = require('fs');
 const CarOffer = require('../models/carOffer');
 const { validationResult } = require('express-validator');
 
@@ -31,6 +33,77 @@ module.exports.getCarById = async (req, res, next) => {
   }
 }
 
+module.exports.updateCarById = async (req, res, next) => {
+  let imagesUrls = []
+  const errors = validationResult(req);
+  const { carId } = req.params;
+  const { name, year, length, seats, description } = req.body;
+  let { currendImagesUrls } = req.body;
+  currendImagesUrls = currendImagesUrls?.split(',') || []
+  imagesUrls = req.files.map(file => `/${file.path.replace("\\", "/")}`);
+
+  if (!errors.isEmpty()) {
+    const err = new Error('Form validation failed!');
+    err.httpStatusCode = 422;
+    return next(err)
+  }
+  if (req.multerError) {
+    const err = new Error('File size / format validation failed!');
+    err.httpStatusCode = 422;
+    return next(err)
+  }
+
+  try {
+    const car = await CarOffer.findByIdAndUpdate(carId, {
+      name,
+      year,
+      length,
+      seats,
+      description,
+      imagesUrls: [...currendImagesUrls, ...imagesUrls],
+    }, { useFindAndModify: false }).exec()
+    const updatedCar = await CarOffer.findById(carId).exec()
+    if (!car || !updatedCar) {
+      const err = new Error('No resources available');
+      err.httpStatusCode = 404;
+      throw err
+    }
+    res.status(200).json({
+      updatedCar,
+    })
+
+    const imagesToRemove = car.imagesUrls.filter(url => !currendImagesUrls.includes(url));
+    imagesToRemove.forEach(img => removeImage(img));
+
+  } catch (err) {
+    if (!err.httpStatusCode) err.httpStatusCode = 500
+    next(err)
+  }
+}
+
+module.exports.deleteCarById = async (req, res, next) => {
+  const { carId } = req.params;
+
+  try {
+    const deletedCar = await CarOffer.findByIdAndDelete(carId).exec()
+    if (!deletedCar) {
+      const err = new Error('No resources available');
+      err.httpStatusCode = 404;
+      throw err
+    }
+    res.status(200).json({
+      deletedCar,
+    })
+
+    deletedCar.imagesUrls.forEach(img => removeImage(img));
+
+  } catch (err) {
+    if (!err.httpStatusCode) err.httpStatusCode = 500
+    next(err)
+  }
+}
+
+
 module.exports.postCar = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -45,7 +118,7 @@ module.exports.postCar = async (req, res, next) => {
   }
   try {
     const { name, year, length, seats, description } = req.body;
-    const imagesUrls = req.files.map(file => `/${file.path.replace("\\" ,"/")}`);
+    const imagesUrls = req.files.map(file => `/${file.path.replace("\\", "/")}`);
 
     const newCarOffer = new CarOffer({
       name,
@@ -64,4 +137,10 @@ module.exports.postCar = async (req, res, next) => {
     if (!err.httpStatusCode) err.httpStatusCode = 500
     next(err)
   }
+}
+
+const removeImage = (url) => {
+  fs.unlink(path.join(__dirname, '..', url), (err) => {
+    if (err) console.log('couldn\'t remove file. Error: ', err)
+  })
 }
