@@ -1,22 +1,21 @@
+const moment = require('moment');
 const path = require('path');
 const fs = require('fs');
 const CarOffer = require('../models/carOffer');
 const { validationResult } = require('express-validator');
 
 module.exports.getCars = async (req, res, next) => {
-  const pageItems = 5;
-  const { page } = req.query;
+  const { elements = 10 } = req.query;
   try {
     const itemsQty = await CarOffer.countDocuments().exec()
-    let toSkip = itemsQty - (pageItems * page)
-    if (toSkip < 0) toSkip = 0
-    let toLimit = pageItems
-    if (itemsQty % pageItems && toSkip === 0) toLimit = itemsQty % pageItems
-    console.log(toLimit)
     const cars = await CarOffer
-      .find()
-      .skip(toSkip)
-      .limit(toLimit)
+      .find(
+        {}, [],
+        {
+          limit: elements * 1,
+          sort: { createdAt: -1 }
+        }
+      )
       .exec()
     res.status(200).json({
       carsRes: {
@@ -29,6 +28,37 @@ module.exports.getCars = async (req, res, next) => {
     next(err)
   }
 }
+
+module.exports.fetchRestCars = async (req, res, next) => {
+  const { elements, newest, oldest } = req.query;
+  try {
+    const itemsQty = await CarOffer.countDocuments().exec()
+    const cars = await CarOffer
+      .find(
+        {
+          $or: [
+            { createdAt: { $lt: moment.utc(oldest, 'x') } },
+            { createdAt: { $gt: moment.utc(newest, 'x') } },
+          ]
+        }, [],
+        {
+          limit: elements * 1,
+          sort: { createdAt: -1 }
+        }
+      )
+      .exec()
+    res.status(200).json({
+      carsRes: {
+        cars,
+        carsQty: itemsQty
+      },
+    })
+  } catch (err) {
+    if (!err.httpStatusCode) err.httpStatusCode = 500
+    next(err)
+  }
+}
+
 
 module.exports.getCarById = async (req, res, next) => {
   try {

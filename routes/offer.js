@@ -34,6 +34,8 @@ const upload = multer({ storage, fileFilter, limits: { fileSize: 525000 } });
 
 router.get('/cars', offerController.getCars)
 
+router.get('/restcars', offerController.fetchRestCars)
+
 router.get('/car/:carId', offerController.getCarById)
 
 router.post('/car', upload.array('images', 10), multerSignUpErrorHandler, postOfferValidator, offerController.postCar)
