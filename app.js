@@ -5,6 +5,7 @@ const app = express();
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const offerRoutes = require('./routes/offer');
+const authRoutes = require('./routes/auth');
 
 const PORT = process.env.PORT || 8000;
 mongoose.connect(process.env.DB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -20,6 +21,7 @@ app.use((req, res, next) => {
 })
 
 app.use('/api/offer', offerRoutes)
+app.use('/api/auth', authRoutes)
 
 app.use((error, req, res, next) => {
   console.log('MAIN ERROR HANDLER ON SERVER: ', error)
