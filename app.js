@@ -25,7 +25,10 @@ app.use('/api/auth', authRoutes)
 
 app.use((error, req, res, next) => {
   console.log('MAIN ERROR HANDLER ON SERVER: ', error)
-  res.status(error.httpStatusCode).json({message: error.message})
+  res.status(error.httpStatusCode).json({
+    message: error.message,
+    validationErrors: error.validationErrors && error.validationErrors,
+  })
 })
 
 

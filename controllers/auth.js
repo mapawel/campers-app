@@ -8,13 +8,15 @@ const { validationResult } = require('express-validator');
 module.exports.postSignUp = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    const err = new Error('Form validation failed!');
+    console.log(errors.errors)
+    const err = new Error('Form validation failed');
     err.httpStatusCode = 422;
+    err.validationErrors = errors.errors;
     return next(err)
   }
 
   try {
-    const { email, password } = req.body;
+    const { email, password, confirmpass } = req.body;
 
     console.log(email, password)
 
