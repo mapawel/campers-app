@@ -28,6 +28,7 @@ app.use((error, req, res, next) => {
   res.status(error.httpStatusCode).json({
     message: error.message,
     validationErrors: error.validationErrors && error.validationErrors,
+    info: error.info && error.info,
   })
 })
 

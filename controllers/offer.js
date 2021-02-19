@@ -25,6 +25,7 @@ module.exports.getCars = async (req, res, next) => {
     })
   } catch (err) {
     if (!err.httpStatusCode) err.httpStatusCode = 500
+    if (!err.info) err.info = 'Couldn\'t fetch data from DB'
     next(err)
   }
 }
@@ -55,6 +56,7 @@ module.exports.fetchRestCars = async (req, res, next) => {
     })
   } catch (err) {
     if (!err.httpStatusCode) err.httpStatusCode = 500
+    if (!err.info) err.info = 'Couldn\'t fetch data from DB'
     next(err)
   }
 }
@@ -74,6 +76,7 @@ module.exports.getCarById = async (req, res, next) => {
     })
   } catch (err) {
     if (!err.httpStatusCode) err.httpStatusCode = 500
+    if (!err.info) err.info = 'Couldn\'t fetch data from DB'
     next(err)
   }
 }
@@ -88,8 +91,9 @@ module.exports.updateCarById = async (req, res, next) => {
   imagesUrls = req.files.map(file => `/${file.path.replace("\\", "/")}`);
 
   if (!errors.isEmpty()) {
-    const err = new Error('Form validation failed!');
+    const err = new Error('Form validation failed');
     err.httpStatusCode = 422;
+    err.validationErrors = errors.errors;
     return next(err)
   }
   if (req.multerError) {
@@ -122,6 +126,7 @@ module.exports.updateCarById = async (req, res, next) => {
 
   } catch (err) {
     if (!err.httpStatusCode) err.httpStatusCode = 500
+    if (!err.info) err.info = 'Couldn\'t udate data in DB'
     next(err)
   }
 }
@@ -144,6 +149,7 @@ module.exports.deleteCarById = async (req, res, next) => {
 
   } catch (err) {
     if (!err.httpStatusCode) err.httpStatusCode = 500
+    if (!err.info) err.info = 'No resource available'
     next(err)
   }
 }
@@ -154,6 +160,7 @@ module.exports.postCar = async (req, res, next) => {
   if (!errors.isEmpty()) {
     const err = new Error('Form validation failed!');
     err.httpStatusCode = 422;
+    err.validationErrors = errors.errors;
     return next(err)
   }
   if (req.multerError) {
@@ -180,6 +187,7 @@ module.exports.postCar = async (req, res, next) => {
     })
   } catch (err) {
     if (!err.httpStatusCode) err.httpStatusCode = 500
+    if (!err.info) err.info = 'Couldn\'t add data to DB'
     next(err)
   }
 }
