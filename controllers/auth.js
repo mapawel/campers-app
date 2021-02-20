@@ -1,5 +1,6 @@
 const moment = require('moment');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { validationResult } = require('express-validator');
 
@@ -43,7 +44,6 @@ module.exports.postLogin = async (req, res, next) => {
     err.validationErrors = errors.errors;
     return next(err)
   }
-
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email }).exec()
@@ -54,9 +54,14 @@ module.exports.postLogin = async (req, res, next) => {
     }
     const passwordVerified = await bcrypt.compare(password, user.password)
     if (passwordVerified) {
+      const token = await jwt.sign({
+        email,
+        userId: user._id,
+      }, 'secret', { expiresIn: '1h' });
       res.status(201).json({
         message: 'User logged in',
         userId: user._id,
+        token,
       })
     } else {
       const err = new Error('Invalid password');

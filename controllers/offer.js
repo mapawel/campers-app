@@ -30,6 +30,28 @@ module.exports.getCars = async (req, res, next) => {
   }
 }
 
+module.exports.getUsersCars = async (req, res, next) => {
+  try {
+    const usersCars = await CarOffer
+      .find(
+        { owner: req.userId }, [],
+        {
+          sort: { createdAt: -1 }
+        }
+      )
+      .exec()
+    res.status(200).json({
+      carsRes: {
+        usersCars,
+      },
+    })
+  } catch (err) {
+    if (!err.httpStatusCode) err.httpStatusCode = 500
+    if (!err.info) err.info = 'Couldn\'t fetch user data from DB'
+    next(err)
+  }
+}
+
 module.exports.fetchRestCars = async (req, res, next) => {
   const { elements, newest, oldest } = req.query;
   try {
@@ -156,6 +178,7 @@ module.exports.deleteCarById = async (req, res, next) => {
 
 
 module.exports.postCar = async (req, res, next) => {
+  const userId = req.userId;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const err = new Error('Form validation failed!');
@@ -179,6 +202,7 @@ module.exports.postCar = async (req, res, next) => {
       seats,
       description,
       imagesUrls,
+      owner: userId,
     });
     const savedData = await newCarOffer.save()
     res.status(201).json({

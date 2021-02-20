@@ -5,6 +5,7 @@ const offerController = require('../controllers/offer');
 const postOfferValidator = require('../validators/postOfferValidator');
 const multer = require('multer');
 const multerSignUpErrorHandler = require('../middlewares/multerSignUpErrorHandler')
+const { isAuth } = require('../middlewares/isAuth');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -32,16 +33,18 @@ const upload = multer({ storage, fileFilter, limits: { fileSize: 525000 } });
 
 
 
-router.get('/cars', offerController.getCars)
+router.get('/cars',  offerController.getCars)
 
 router.get('/restcars', offerController.fetchRestCars)
 
+router.get('/userscars',  isAuth, offerController.getUsersCars)
+
 router.get('/car/:carId', offerController.getCarById)
 
-router.post('/car', upload.array('images', 10), multerSignUpErrorHandler, postOfferValidator, offerController.postCar)
+router.post('/car', upload.array('images', 10), multerSignUpErrorHandler, postOfferValidator, isAuth, offerController.postCar)
 
-router.put('/car/:carId', upload.array('images', 10), multerSignUpErrorHandler, postOfferValidator, offerController.updateCarById)
+router.put('/car/:carId', upload.array('images', 10), multerSignUpErrorHandler, postOfferValidator, isAuth, offerController.updateCarById)
 
-router.delete('/car/:carId', offerController.deleteCarById)
+router.delete('/car/:carId', isAuth, offerController.deleteCarById)
 
 module.exports = router;

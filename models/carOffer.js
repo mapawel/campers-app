@@ -9,7 +9,8 @@ const carOfferSchema = new Schema({
   description: String,
   imagesUrls: [],
   owner: {
-    type: Object,
+    type: Schema.Types.ObjectId,
+    ref: 'User',
   },
 }, { timestamps: true })
 
