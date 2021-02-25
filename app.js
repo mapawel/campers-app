@@ -27,6 +27,7 @@ app.use((error, req, res, next) => {
   console.log('MAIN ERROR HANDLER ON SERVER: ', error)
   res.status(error.httpStatusCode).json({
     message: error.message,
+    httpStatusCode: error.httpStatusCode && error.httpStatusCode,
     validationErrors: error.validationErrors && error.validationErrors,
     info: error.info && error.info,
   })

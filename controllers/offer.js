@@ -7,7 +7,7 @@ const { validationResult } = require('express-validator');
 module.exports.getCars = async (req, res, next) => {
   const { elements = 10 } = req.query;
   try {
-    const itemsQty = await CarOffer.countDocuments().exec()
+    const itemsQty = await xCarOffer.countDocuments().exec()
     const cars = await CarOffer
       .find(
         {}, [],

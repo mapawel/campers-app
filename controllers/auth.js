@@ -26,7 +26,7 @@ module.exports.postSignUp = async (req, res, next) => {
     const savedData = await newUser.save()
     res.status(201).json({
       message: 'A new user signed up',
-      userId: savedData._id,
+      userEmail: savedData.email,
     })
   } catch (err) {
     if (!err.httpStatusCode) err.httpStatusCode = 500
@@ -57,10 +57,10 @@ module.exports.postLogin = async (req, res, next) => {
       const token = await jwt.sign({
         email,
         userId: user._id,
-      }, 'secret', { expiresIn: '1h' });
+      }, 'secret', { expiresIn: 20 });
       res.status(201).json({
         message: 'User logged in',
-        userId: user._id,
+        userEmail: user.email,
         token,
       })
     } else {
