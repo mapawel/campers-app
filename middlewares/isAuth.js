@@ -23,7 +23,6 @@ module.exports.isAuth = async (req, res, next) => {
     if (err.name === 'TokenExpiredError') {
       err.httpStatusCode = 401;
       err.info = 'You have been logged out, please log in again';
-      err.action = 'logout';
     }
     if (!err.httpStatusCode) err.httpStatusCode = 500
     if (!err.info) err.info = 'Authorization problem'

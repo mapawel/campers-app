@@ -11,10 +11,11 @@ module.exports.postSignUp = async (req, res, next) => {
   if (!errors.isEmpty()) {
     const err = new Error('Form validation failed');
     err.httpStatusCode = 422;
+    if (!err.info) err.info = 'Form validation failed'
     err.validationErrors = errors.errors;
     return next(err)
   }
-
+  
   try {
     const { email, password } = req.body;
     const salt = await bcrypt.genSalt(12)
@@ -41,6 +42,7 @@ module.exports.postLogin = async (req, res, next) => {
   if (!errors.isEmpty()) {
     const err = new Error('Form validation failed');
     err.httpStatusCode = 422;
+    if (!err.info) err.info = 'Form validation failed'
     err.validationErrors = errors.errors;
     return next(err)
   }
@@ -50,6 +52,7 @@ module.exports.postLogin = async (req, res, next) => {
     if (!user) {
       const err = new Error('E-mail address doesn\'t exist');
       err.httpStatusCode = 401;
+      if (!err.info) err.info = 'E-mail address doesn\'t exist'
       return next(err)
     }
     const passwordVerified = await bcrypt.compare(password, user.password)
@@ -57,7 +60,7 @@ module.exports.postLogin = async (req, res, next) => {
       const token = await jwt.sign({
         email,
         userId: user._id,
-      }, 'secret', { expiresIn: 20 });
+      }, 'secret', { expiresIn: '3h' });
       res.status(201).json({
         message: 'User logged in',
         userEmail: user.email,
@@ -66,6 +69,7 @@ module.exports.postLogin = async (req, res, next) => {
     } else {
       const err = new Error('Invalid password');
       err.httpStatusCode = 401;
+      if (!err.info) err.info = 'Invalid password'
       return next(err)
     }
   } catch (err) {

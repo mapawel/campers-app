@@ -7,7 +7,7 @@ const { validationResult } = require('express-validator');
 module.exports.getCars = async (req, res, next) => {
   const { elements = 10 } = req.query;
   try {
-    const itemsQty = await xCarOffer.countDocuments().exec()
+    const itemsQty = await CarOffer.countDocuments().exec()
     const cars = await CarOffer
       .find(
         {}, [],
@@ -91,6 +91,7 @@ module.exports.getCarById = async (req, res, next) => {
     if (!car) {
       const err = new Error('No resources available');
       err.httpStatusCode = 404;
+      if (!err.info) err.info = 'No resources available'
       throw err
     }
     res.status(200).json({
@@ -112,40 +113,48 @@ module.exports.updateCarById = async (req, res, next) => {
   currendImagesUrls = currendImagesUrls?.split(',') || []
   imagesUrls = req.files.map(file => `/${file.path.replace("\\", "/")}`);
 
-  if (!errors.isEmpty()) {
-    const err = new Error('Form validation failed');
-    err.httpStatusCode = 422;
-    err.validationErrors = errors.errors;
-    return next(err)
-  }
-  if (req.multerError) {
-    const err = new Error('File size / format validation failed!');
-    err.httpStatusCode = 422;
-    return next(err)
-  }
-
   try {
-    const car = await CarOffer.findByIdAndUpdate(carId, {
+    const car = await CarOffer.findById(carId)
+    if (!car) {
+      const err = new Error('No resources available');
+      err.httpStatusCode = 404;
+      if (!err.info) err.info = 'No resources available';
+      throw err
+    }
+    if (car.owner.toString() !== req.userId) {
+      const err = new Error('Access denied');
+      err.httpStatusCode = 401;
+      if (!err.info) err.info = 'Access denied';
+      throw err
+    }
+    if (!errors.isEmpty()) {
+      const err = new Error('Form validation failed');
+      err.httpStatusCode = 422;
+      if (!err.info) err.info = 'Form validation failed';
+      err.validationErrors = errors.errors;
+      return next(err)
+    }
+    if (req.multerError) {
+      const err = new Error('File size / format validation failed!');
+      err.httpStatusCode = 422;
+      if (!err.info) err.info = 'File size / format validation failed! Images required';
+      return next(err)
+    }
+
+    await car.update({
       name,
       year,
       length,
       seats,
       description,
       imagesUrls: [...currendImagesUrls, ...imagesUrls],
-    }, { useFindAndModify: false }).exec()
+    });
     const updatedCar = await CarOffer.findById(carId).exec()
-    if (!car || !updatedCar) {
-      const err = new Error('No resources available');
-      err.httpStatusCode = 404;
-      throw err
-    }
     res.status(200).json({
       updatedCar,
     })
-
     const imagesToRemove = car.imagesUrls.filter(url => !currendImagesUrls.includes(url));
     imagesToRemove.forEach(img => removeImage(img));
-
   } catch (err) {
     if (!err.httpStatusCode) err.httpStatusCode = 500
     if (!err.info) err.info = 'Couldn\'t udate data in DB'
@@ -157,21 +166,27 @@ module.exports.deleteCarById = async (req, res, next) => {
   const { carId } = req.params;
 
   try {
-    const deletedCar = await CarOffer.findByIdAndDelete(carId).exec()
-    if (!deletedCar) {
+    const toDelete = await CarOffer.findById(carId).exec()
+    if (!toDelete) {
       const err = new Error('No resources available');
       err.httpStatusCode = 404;
+      if (!err.info) err.info = 'No resources available';
       throw err
     }
+    if (toDelete.owner.toString() !== req.userId) {
+      const err = new Error('Access denied');
+      err.httpStatusCode = 401;
+      if (!err.info) err.info = 'Access denied';
+      throw err
+    }
+    await CarOffer.deleteOne({ _id: toDelete._id }).exec()
     res.status(200).json({
-      deletedCar,
+      toDelete,
     })
-
-    deletedCar.imagesUrls.forEach(img => removeImage(img));
-
+    toDelete.imagesUrls.forEach(img => removeImage(img));
   } catch (err) {
     if (!err.httpStatusCode) err.httpStatusCode = 500
-    if (!err.info) err.info = 'No resource available'
+    if (!err.info) err.info = 'Server error, could\'n delete resource'
     next(err)
   }
 }
@@ -183,18 +198,19 @@ module.exports.postCar = async (req, res, next) => {
   if (!errors.isEmpty()) {
     const err = new Error('Form validation failed!');
     err.httpStatusCode = 422;
+    if (!err.info) err.info = 'Form validation failed!';
     err.validationErrors = errors.errors;
     return next(err)
   }
   if (req.multerError) {
     const err = new Error('File size / format validation failed!');
     err.httpStatusCode = 422;
+    if (!err.info) err.info = 'File size / format validation failed! Images required';
     return next(err)
   }
   try {
     const { name, year, length, seats, description } = req.body;
     const imagesUrls = req.files.map(file => `/${file.path.replace("\\", "/")}`);
-
     const newCarOffer = new CarOffer({
       name,
       year,

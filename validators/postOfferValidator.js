@@ -5,7 +5,7 @@ module.exports = [
   .trim()
   .isString()
   .withMessage('Offer name is not a proper name (string required)')
-  .isLength({ min: 4 })
+  .isLength({ min: 6 })
   .withMessage('Offer name is too short (4 chaacters required)'),
   body('year')
   .trim()
